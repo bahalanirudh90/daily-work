@@ -170,6 +170,9 @@ but not
 <span class="price something">99.99</span>
 ```
 ## 8. getWindowHandle vs getWindowHandles
+
+**Practice Website:** `https://opensource-demo.orangehrmlive.com/web/index.php/auth/login`
+
 - `getWindowHandle()` returns the handle (ID) of the current window as a String.
 - `getWindowHandles()` returns a Set of Strings for all open windows/tabs.
 
@@ -184,7 +187,56 @@ for (String handle : handles) {
     }
 }
 ```
+
+### Practical Example: Closing Specific Browser Windows
+```java
+package day28;
+
+import java.time.Duration;
+import java.util.Set;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
+
+public class ClosingSpecificBrowserWindow {
+    public static void main(String[] args) {
+        WebDriver driver = new ChromeDriver();
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        
+        driver.get("https://opensource-demo.orangehrmlive.com/web/index.php/auth/login");
+        driver.manage().window().maximize();
+        
+        // Click link that opens new window
+        driver.findElement(By.xpath("//a[normalize-space()='OrangeHRM, Inc']")).click();
+        
+        // Get all window handles
+        Set<String> windowIDs = driver.getWindowHandles();
+
+        for (String winid : windowIDs) {
+            String title = driver.switchTo().window(winid).getTitle();
+            // Alternative: String url = driver.switchTo().window(winid).getCurrentUrl();
+            
+            System.out.println(title);
+            
+            // Close specific windows based on title
+            if (title.equals("Human Resources Management Software | OrangeHRM") || 
+                title.equals("some other title")) {
+                driver.close();
+            }
+        }
+    }
+}
+```
+
+**Key Points:**
+- Use `getWindowHandles()` to get all open windows/tabs
+- Switch to each window using `switchTo().window(handle)`
+- Get window title or URL to identify the specific window
+- Use `close()` to close the current window
+- Use multiple conditions (`||`) to close windows with different titles
 ## 9. Conditional Methods: isDisplayed(), isEnabled(), isSelected()
+
+**Practice Website:** `https://demo.nopcommerce.com/register`
 
 These methods help verify the state of web elements:
 
@@ -258,4 +310,203 @@ driver.navigate().to(url);
 ```
 
 **Key Difference:** `navigate().to()` provides more flexibility by accepting URL objects, while `get()` only works with string URLs.
+
+### Additional Navigation Methods
+```java
+// Navigate back to previous page (browser back button)
+driver.navigate().back();
+
+// Navigate forward to next page (browser forward button)  
+driver.navigate().forward();
+
+// Refresh/reload the current page (F5 or Ctrl+R)
+driver.navigate().refresh();
 ```
+
+These methods simulate browser navigation actions and are useful for testing multi-page workflows.
+
+## 11. Handling Checkboxes in Selenium
+
+**Practice Website:** `https://itera-qa.azurewebsites.net/home/automation`
+
+- **Select a specific checkbox:**
+```java
+driver.findElement(By.xpath("//input[@id='monday']")).click();
+```
+
+- **Count total checkboxes:**
+```java
+List<WebElement> checkboxes = driver.findElements(By.xpath("//input[@class='form-check-input' and @type='checkbox']"));
+System.out.println("Total number of checkboxes: " + checkboxes.size());
+```
+
+- **Select all checkboxes:**
+```java
+for(WebElement chkbox : checkboxes) {
+    chkbox.click();
+}
+```
+
+- **Select last N checkboxes:**
+```java
+for(int i = checkboxes.size() - N; i < checkboxes.size(); i++) {
+    checkboxes.get(i).click();
+}
+```
+
+- **Select first N checkboxes:**
+```java
+for(int i = 0; i < N; i++) {
+    checkboxes.get(i).click();
+}
+```
+
+- **Uncheck all selected checkboxes:**
+```java
+for(WebElement chkbox : checkboxes) {
+    if(chkbox.isSelected()) {
+        chkbox.click();
+    }
+}
+```
+
+**Concepts:**
+- Use `findElements` to get all checkboxes as a list
+- Use loops to select/unselect based on index or condition
+- Use `isSelected()` to check if a checkbox is checked
+- Use concise snippets to retain the concept, not full code
+
+## 12. Handling Dropdowns in Selenium
+
+### Dropdown with `<select>` tag
+**Practice Website:** `https://phppot.com/demo/jquery-dependent-dropdown-list-countries-and-states/`
+
+- **Create Select object:**
+```java
+WebElement drpCountryEle = driver.findElement(By.xpath("//select[@id='country-list']"));
+Select drpCountry = new Select(drpCountryEle);
+```
+
+- **Select options:**
+```java
+drpCountry.selectByVisibleText("USA");
+drpCountry.selectByValue("4");  // if value attribute exists
+drpCountry.selectByIndex(3);    // by index position
+```
+
+- **Get all options:**
+```java
+List<WebElement> options = drpCountry.getOptions();
+System.out.println("Total options: " + options.size());
+```
+
+- **Print all options:**
+```java
+for(WebElement op : options) {
+    System.out.println(op.getText());
+}
+```
+
+### Dropdown without `<select>` tag (Custom dropdowns)
+**Practice Website:** `https://www.jquery-az.com/boots/demo.php?ex=63.0_2`
+
+- **Click to open dropdown:**
+```java
+driver.findElement(By.xpath("//button[contains(@class,'multiselect')]")).click();
+```
+
+- **Get all options:**
+```java
+List<WebElement> options = driver.findElements(By.xpath("//ul[contains(@class,multiselect)]//label"));
+```
+
+- **Select specific options:**
+```java
+for(WebElement option : options) {
+    String text = option.getText();
+    if(text.equals("Java") || text.equals("Python")) {
+        option.click();
+    }
+}
+```
+
+**Key Differences:**
+- Select tag: Use `Select` class methods
+- Custom dropdowns: Use `findElements` and click manually
+- Custom dropdowns require opening first, then selecting options
+
+## 13. Handling Alerts in Selenium
+
+**Practice Website:** `https://the-internet.herokuapp.com/javascript_alerts`
+
+- **Normal alert with OK button:**
+```java
+driver.findElement(By.xpath("//button[normalize-space()='Click for JS Alert']")).click();
+driver.switchTo().alert().accept();
+```
+
+- **Confirmation alert (OK & Cancel):**
+```java
+driver.findElement(By.xpath("//button[normalize-space()='Click for JS Confirm']")).click();
+driver.switchTo().alert().accept();   // click OK
+driver.switchTo().alert().dismiss();  // click Cancel
+```
+
+- **Prompt alert (Input box):**
+```java
+driver.findElement(By.xpath("//button[normalize-space()='Click for JS Prompt']")).click();
+Alert myalert = driver.switchTo().alert();
+System.out.println("Alert text: " + myalert.getText());
+myalert.sendKeys("John");
+myalert.accept();
+```
+
+- **Handle alert with explicit wait:**
+```java
+WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+Alert myalert = wait.until(ExpectedConditions.alertIsPresent());
+myalert.accept();
+```
+
+## 14. Handling Frames/iFrames
+
+**Practice Website:** `https://ui.vision/demo/webtest/frames/`
+
+- **Switch to frame by WebElement:**
+```java
+WebElement frame1 = driver.findElement(By.xpath("//frame[@src='frame_1.html']"));
+driver.switchTo().frame(frame1);
+driver.findElement(By.xpath("//input[@name='mytext1']")).sendKeys("Welcome");
+```
+
+- **Switch back to main content:**
+```java
+driver.switchTo().defaultContent();
+```
+
+- **Switch to inner frame (nested frame):**
+```java
+driver.switchTo().frame(0);  // by index
+```
+
+- **Other ways to switch frames:**
+```java
+driver.switchTo().frame("frameName");    // by name
+driver.switchTo().frame("frameId");      // by id
+driver.switchTo().frame(1);              // by index
+```
+
+## 15. Handling Authentication Popups
+
+**Practice Website:** `http://the-internet.herokuapp.com/basic_auth`
+
+- **Handle basic authentication popup:**
+```java
+// Syntax: http://username:password@website-url
+driver.get("http://admin:admin@the-internet.herokuapp.com/basic_auth");
+```
+
+**Concepts:**
+- Alerts: Use `switchTo().alert()` for all alert operations
+- Frames: Always `switchTo().defaultContent()` to go back to main page
+- Authentication: Pass credentials directly in URL
