@@ -46,29 +46,97 @@ WebElement link2 = driver.findElement(By.partialLinkText("Sam"));
 ```
 
 ## 5. Types of Waits (with Syntax)
+
+### Wait Methods & Synchronization
+
+**Synchronization** is crucial in Selenium to handle timing issues between your script and the web page loading.
+
+**Common Exceptions:**
+- `NoSuchElementException`: Element is not present on the page (Synchronization issue)
+- `ElementNotFoundException`: Locator is incorrect
+
+### Thread.sleep(time in ms)
+```java
+Thread.sleep(5000); // waits for 5 seconds
+```
+
+**Advantages:**
+1) Simple to implement and understand
+
+**Disadvantages:**
+1) Causes test failures if elements take longer to load than expected
+2) Always waits for the full duration, wasting time and slowing down test execution
+3) Using multiple sleep statements significantly increases overall test runtime
+
 ### 1. Implicit Wait
-- Waits for a certain amount of time when trying to find an element if it is not immediately available.
 ```java
 driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
 ```
 
+**Advantages:**
+1) Set once and applies to all element searches automatically
+2) Waits only as long as needed - stops immediately when element is found
+3) Works globally for all findElement operations
+4) Simple one-line configuration
+
+**Disadvantages:**
+1) Still causes test failures if the timeout duration is insufficient for slow-loading elements
+
 ### 2. Explicit Wait
-- Waits for a specific condition to occur before proceeding.
+Works based on time and condition.
+
+**Declaration & Use:**
 ```java
 WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
 WebElement element = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("someId")));
 ```
 
+**Advantages:**
+1) Waits for specific conditions to be met, making tests more reliable
+2) Can wait for complex conditions like element visibility, clickability, or text presence
+3) Intelligently waits until the condition is satisfied before proceeding
+4) More robust and flexible than implicit waits
+
+**Disadvantages:**
+1) Requires separate wait statements for each element that needs explicit waiting
+
+**Common Explicit Wait Conditions:**
+- `alertIsPresent()`
+- `elementSelectionStateToBe()`
+- `elementToBeClickable()`
+- `elementToBeSelected()`
+- `frameToBeAvailableAndSwitchToIt()`
+- `presenceOfAllElementsLocatedBy()`
+- `presenceOfElementLocated()`
+- `textToBePresentInElement()`
+- `textToBePresentInElementLocated()`
+- `textToBePresentInElementValue()`
+- `titleIs()`
+- `titleContains()`
+- `visibilityOf()`
+- `visibilityOfAllElements()`
+- `visibilityOfAllElementsLocatedBy()`
+- `visibilityOfElementLocated()`
+
 ### 3. Fluent Wait
-- Similar to explicit wait, but allows polling frequency and ignoring specific exceptions.
 ```java
-Wait<WebDriver> fluentWait = new FluentWait<>(driver)
-    .withTimeout(Duration.ofSeconds(20))
+Wait<WebDriver> wait = new FluentWait<WebDriver>(driver)
+    .withTimeout(Duration.ofSeconds(30))
     .pollingEvery(Duration.ofSeconds(2))
     .ignoring(NoSuchElementException.class);
 
-WebElement element = fluentWait.until(driver -> driver.findElement(By.id("someId")));
+WebElement foo = wait.until(new Function<WebDriver, WebElement>() {
+    public WebElement apply(WebDriver driver) {
+        return driver.findElement(By.id("foo"));
+    }
+});
 ```
+
+### Page Load Timeout
+```java
+driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(5));
+```
+Sets maximum time to wait for a page to load completely.
 ## 6. Handling Dynamic Attributes in XPath
 If an element's attribute (like `id`) changes dynamically (e.g., a button displays 'start' and then 'stop'), you can use XPath with logical operators or functions:
 
@@ -161,4 +229,33 @@ System.out.println(female_rd.isSelected()); // true
 
 boolean newsletterStatus = driver.findElement(By.xpath("//input[@id='Newsletter']")).isSelected();
 System.out.println("Newsletter checkbox status: " + newsletterStatus); // true
+```
+
+Use these methods to validate element states in your Selenium tests.
+
+## 10. driver.get() vs driver.navigate().to()
+
+### driver.get()
+- Accepts only **String** parameter (URL as text)
+- Simple method for navigating to a webpage
+
+```java
+driver.get("https://www.google.com");
+```
+
+### driver.navigate().to()
+- Accepts both **String** and **URL object** (java.net.URL)
+- More flexible navigation method
+
+```java
+// Using String
+driver.navigate().to("https://www.google.com");
+
+// Using URL object
+import java.net.URL;
+URL url = new URL("https://www.google.com");
+driver.navigate().to(url);
+```
+
+**Key Difference:** `navigate().to()` provides more flexibility by accepting URL objects, while `get()` only works with string URLs.
 ```
